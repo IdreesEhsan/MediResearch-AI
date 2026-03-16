@@ -1,3 +1,4 @@
 # Anything will be pushed
 .env
 venv
+.env.example
