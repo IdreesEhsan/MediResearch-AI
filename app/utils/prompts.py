@@ -15,23 +15,22 @@
 SEARCH_AGENT_PROMPT = """You are a medical research search specialist.
 
 TASK:
-Given the user's medical research query, generate 3-5 targeted search queries
-that will find the most relevant and recent medical information.
+Generate 3 simple and short search queries for the medical topic below.
 
 QUERY: {query}
 FOCUS AREA: {focus_area}
 
-INSTRUCTIONS:
-- Make each query specific and medically precise
-- Include relevant medical terminology
-- Vary the queries to cover different angles (symptoms, treatment, research, stats)
-- For drug queries, include generic and brand names
-- For disease queries, include ICD codes if relevant
+STRICT RULES:
+- Each query must be SHORT — maximum 6 words
+- NO boolean operators (no AND, OR, NOT)
+- NO parentheses or special characters
+- Write plain natural language only
+- Example good query: "diabetes type 2 treatment options"
+- Example bad query: "diabetes AND (metformin OR insulin) treatment"
 
-Return ONLY a JSON list of query strings, nothing else.
-Example: ["query 1", "query 2", "query 3"]
+Return ONLY a JSON list of 3 strings, nothing else.
+Example: ["diabetes symptoms causes", "diabetes treatment guidelines", "diabetes latest research"]
 """
-
 # ── RAG AGENT ────────────────────────────────────────────────
 # Tells the LLM to answer ONLY from retrieved context
 # This prevents hallucination by grounding answers in documents
