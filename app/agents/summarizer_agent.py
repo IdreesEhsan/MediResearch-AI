@@ -102,7 +102,6 @@ def format_news_results(results: List[Dict[str, Any]]) -> str:
         )
     return formatted
 
-@trace_agent("summarizer_agent")
 def run_summarizer_agent(state: ResearchState) -> ResearchState:
     """
     Main Summarizer Agent — called by LangGraph as a node.

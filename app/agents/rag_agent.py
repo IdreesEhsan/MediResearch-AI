@@ -84,7 +84,6 @@ def generate_rag_answer(query: str, focus_area: str, context: str) -> str:
     response = llm.invoke([HumanMessage(content=prompt)])
     return response.content
 
-@trace_agent("rag_agent")
 def run_rag_agent(state: ResearchState) -> ResearchState:
     """
     Main RAG Agent function — called by LangGraph as a node.
