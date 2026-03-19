@@ -1,36 +1,34 @@
 # ============================================================
 # app/graph/state.py
 # ============================================================
-# ResearchState — the single shared object that flows through
+# ResearchState — the shared data structure passed between
 # all 8 LangGraph nodes.
 #
-# Every agent reads from this state and writes back only the
-# fields it updates. LangGraph merges everything automatically.
+# Fields written by multiple parallel agents use Annotated
+# with operator.add so LangGraph merges them automatically
+# instead of raising InvalidUpdateError.
 # ============================================================
 
 import uuid
-from typing import TypedDict, List, Dict, Optional, Any
+import operator
+from typing import TypedDict, List, Dict, Optional, Any, Annotated
 from enum import Enum
+
 
 # ── Enums ─────────────────────────────────────────────────────
 
 class FocusArea(str, Enum):
-    """
-    The four supported research domains.
-    Used by the router to configure agent behaviour.
-    """
-    GENERAL = "general"   # General medical Q&A
-    DISEASE = "disease"   # Disease-specific research
-    DRUG    = "drug"      # Drug and treatment research
-    NEWS    = "news"      # Latest medical news
-    
+    GENERAL = "general"
+    DISEASE = "disease"
+    DRUG    = "drug"
+    NEWS    = "news"
+
+
 class HITLDecision(str, Enum):
-    """
-    Possible outcomes from the doctor approval gate.
-    """
-    PENDING  = "pending"   # Doctor has not reviewed yet
-    APPROVED = "approved"  # Doctor approved — proceed to report
-    REJECTED = "rejected"  # Doctor rejected — loop back with notes
+    PENDING  = "pending"
+    APPROVED = "approved"
+    REJECTED = "rejected"
+
 
 # ── State ─────────────────────────────────────────────────────
 
@@ -38,93 +36,70 @@ class ResearchState(TypedDict, total=False):
     """
     Central state object shared across all 8 LangGraph nodes.
 
-    total=False means all fields are optional — each agent only
-    needs to return the fields it changed. LangGraph handles
-    merging the rest automatically.
+    Fields marked with Annotated + operator.add are LIST fields
+    that can be safely written by multiple parallel agents at
+    the same time — LangGraph merges them by concatenation.
 
-    ── INPUT ────────────────────────────────────────────────
-    query:        The user's research question
-    focus_area:   Research domain (general/disease/drug/news)
-    session_id:   Unique ID for this research session
-
-    ── PHASE 1 — PARALLEL OUTPUTS ───────────────────────────
-    search_results:  Results from Search Agent
-    rag_results:     Validated chunks from RAG Agent
-    news_results:    Latest news from News Agent
-    sources:         All source references collected
-    
-     ── PHASE 2 — SEQUENTIAL OUTPUTS ─────────────────────────
-    summary:             Merged summary from Summarizer Agent
-    fact_check_results:  Validated claims from Fact-Check Agent
-    confidence_score:    Overall score 0-100
-
-    ── PHASE 3 — HITL ───────────────────────────────────────
-    hitl_decision:  PENDING / APPROVED / REJECTED
-    hitl_comments:  Doctor notes and corrections
-    final_report:   Final Markdown report
-
-    ── MEMORY AGENT (new feature) ───────────────────────────
-    chat_history:    Prior session records
-    context_summary: Summarized prior context to inject
-    session_saved:   True once session is saved to SQLite
-
-    ── EXPORT AGENT (new feature) ───────────────────────────
-    export_pdf_path:  Path to generated PDF file
-    export_word_path: Path to generated Word file
-    
-     ── ERROR HANDLING ────────────────────────────────────────
-    error:        Error message if an agent fails
-    retry_count:  How many times workflow has looped back
+    All other fields are written by only one agent at a time.
     """
-    
-    # Input Fields
-    query: str
+
+    # ── Input ─────────────────────────────────────────────────
+    query:      str
     focus_area: FocusArea
     session_id: str
-    
-    # Phase 1 — parallel agent outputs
-    search_results: List[Dict[str, Any]]  # [{title, url, snippet}]
-    rag_results:    List[Dict[str, Any]]  # [{text, source, score}]
-    news_results:   List[Dict[str, Any]]  # [{title, url, date, summary}]
-    sources:        List[str]             # All source references
 
-    # Phase 2 — sequential agent outputs
+    # ── Phase 1 outputs ───────────────────────────────────────
+    # Annotated with operator.add so parallel agents can all
+    # append to these lists without conflicting with each other
+    search_results: Annotated[List[Dict[str, Any]], operator.add]
+    rag_results:    Annotated[List[Dict[str, Any]], operator.add]
+    news_results:   Annotated[List[Dict[str, Any]], operator.add]
+
+    # Sources collected from all agents — merged by concatenation
+    sources: Annotated[List[str], operator.add]
+
+    # ── Phase 2 outputs ───────────────────────────────────────
+    # These are written by one agent at a time — no annotation needed
     summary:            str
-    fact_check_results: List[Dict[str, Any]]  # [{claim, status, source, note}]
-    confidence_score:   int                   # 0 to 100
+    fact_check_results: List[Dict[str, Any]]
+    confidence_score:   int
 
-    # Phase 3 — HITL
+    # ── HITL ──────────────────────────────────────────────────
     hitl_decision: HITLDecision
     hitl_comments: str
     final_report:  str
-    
-    # Memory Agent fields
-    chat_history:    List[Dict[str, Any]]  # Prior session records
-    context_summary: str                   # Summarized prior context
-    session_saved:   bool                  # True once saved to SQLite
 
-    # Export Agent fields
-    export_pdf_path:  Optional[str]   # Path to generated PDF
-    export_word_path: Optional[str]   # Path to generated Word file
+    # ── Memory Agent ──────────────────────────────────────────
+    chat_history:    List[Dict[str, Any]]
+    context_summary: str
+    session_saved:   bool
 
-    # Error handling
-    error:       Optional[str]  # Error message if something fails
-    retry_count: int            # Increments each time doctor rejects
-    
+    # ── Export Agent ──────────────────────────────────────────
+    export_pdf_path:  Optional[str]
+    export_word_path: Optional[str]
+
+    # ── Error handling ────────────────────────────────────────
+    error:       Optional[str]
+    retry_count: int
+
+
 # ── Factory Function ──────────────────────────────────────────
 
-def initial_state(query: str, focus_area: str, session_id: str = None) -> ResearchState:
+def initial_state(
+    query: str,
+    focus_area: str,
+    session_id: str = None
+) -> ResearchState:
     """
     Create a fresh ResearchState with all default values.
-    Call this at the start of every new research session.
 
     Args:
         query:      The user's research question.
         focus_area: One of: general / disease / drug / news
-        session_id: Optional UUID — generated automatically if not provided.
+        session_id: Optional UUID — generated if not provided.
 
     Returns:
-        Fully initialized ResearchState ready for the workflow.
+        Fully initialized ResearchState.
     """
     return ResearchState(
         # Input
@@ -132,28 +107,28 @@ def initial_state(query: str, focus_area: str, session_id: str = None) -> Resear
         focus_area = FocusArea(focus_area),
         session_id = session_id or str(uuid.uuid4()),
 
-        # Phase 1 — empty lists to start
+        # Phase 1 — empty lists
         search_results = [],
         rag_results    = [],
         news_results   = [],
         sources        = [],
 
-        # Phase 2 — empty to start
+        # Phase 2 — empty
         summary            = "",
         fact_check_results = [],
         confidence_score   = 0,
 
-        # HITL — pending until doctor reviews
+        # HITL — pending
         hitl_decision = HITLDecision.PENDING,
         hitl_comments = "",
         final_report  = "",
 
-        # Memory — empty until Memory Agent loads history
+        # Memory — empty
         chat_history    = [],
         context_summary = "",
         session_saved   = False,
 
-        # Export — None until Export Agent generates files
+        # Export — none yet
         export_pdf_path  = None,
         export_word_path = None,
 

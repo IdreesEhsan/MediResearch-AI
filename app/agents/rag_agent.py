@@ -114,9 +114,8 @@ def run_rag_agent(state: ResearchState) -> ResearchState:
             # Return empty results — Search Agent will cover this gap
             print("   ⚠️  No relevant chunks found — fallback to web search")
             return {
-                **state,
-                "rag_results": [],
-                "sources":     state.get("sources", [])
+            "rag_results": rag_results,
+            "sources":     all_sources
             }
             
         # Step 3: Format results for state

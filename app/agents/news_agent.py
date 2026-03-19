@@ -192,9 +192,8 @@ def run_news_agent(state: ResearchState) -> ResearchState:
         all_sources  = list(set(state.get("sources", []) + news_sources))
 
         return {
-            **state,
             "news_results": news_results,
-            "sources":      all_sources
+            "sources":      news_sources
         }
 
     except Exception as e:

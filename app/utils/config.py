@@ -48,6 +48,7 @@ class Config:
     LANGSMITH_PROJECT: str = os.getenv("LANGCHAIN_PROJECT", "MediResearch-AI")
     
     # ── Search ───────────────────────────────────────────────
+    TAVILY_API_KEY: str = os.getenv("TAVILY_API_KEY", "")
     SERPAPI_API_KEY = os.getenv("SERPAPI_API_KEY", "")
     SEARCH_MAX_RESULTS = 5
     NEWS_LOOKBACK_DAYS = 90

@@ -145,9 +145,8 @@ def run_search_agent(state: ResearchState) -> ResearchState:
         sources = [r["url"] for r in results if r.get("url")]
 
         return {
-            **state,
             "search_results": results,
-            "sources":        list(set(state.get("sources", []) + sources))
+            "sources":        sources
         }
 
     except Exception as e:
