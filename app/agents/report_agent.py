@@ -23,7 +23,7 @@ from langchain_core.messages import HumanMessage
 from app.utils.config import config
 from app.utils.prompts import REPORT_AGENT_PROMPT
 from app.graph.state import ResearchState
-
+from app.utils.langsmith_config import trace_agent
 
 # ── LLM Setup ─────────────────────────────────────────────────
 llm = ChatGroq(
@@ -88,6 +88,7 @@ def format_sources(sources: List[str]) -> str:
         
     return formatted
 
+@trace_agent("report_agent")
 def run_report_agent(state: ResearchState) -> ResearchState:
     """
     Main Report Agent — called by LangGraph as a node.

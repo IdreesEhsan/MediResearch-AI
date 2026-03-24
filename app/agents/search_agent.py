@@ -3,19 +3,19 @@
 # ============================================================
 # Search Agent — Phase 1 (Parallel)
 #
-# Uses Tavily Search API — designed specifically for AI agents.
-# No rate limiting, high quality results, free tier available.
+# Uses Tavily Search API exclusively.
+# Tavily is designed for AI agents — no rate limiting,
+# high quality results, free tier: 1000 searches/month.
 #
-# Fallback: DuckDuckGo if Tavily key is not set
+# Get your key at: https://tavily.com
 # ============================================================
 
-import time
 from typing import List, Dict, Any
+from tavily import TavilyClient
 
 from langchain_groq import ChatGroq
-from langchain_core.messages import HumanMessage
-
 from app.utils.config import config
+from app.utils.langsmith_config import trace_agent
 from app.graph.state import ResearchState
 
 
@@ -27,17 +27,22 @@ llm = ChatGroq(
     max_tokens=config.GROQ_MAX_TOKENS
 )
 
+# ── Tavily Client ─────────────────────────────────────────────
+# Initialize once — reused for all searches
+tavily_client = TavilyClient(api_key=config.TAVILY_API_KEY)
+
 
 def generate_search_queries(query: str, focus_area: str) -> List[str]:
     """
-    Generate simple focused search queries based on focus area.
+    Generate 3 focused search queries based on focus area.
+    Simple direct queries work best with Tavily.
 
     Args:
         query:      The user's research question.
         focus_area: Research domain.
 
     Returns:
-        List of 3 simple search query strings.
+        List of 3 search query strings.
     """
     clean_query = query.strip()
 
@@ -60,6 +65,7 @@ def generate_search_queries(query: str, focus_area: str) -> List[str]:
             f"{clean_query} new findings"
         ]
     else:
+        # General medical queries
         return [
             f"{clean_query} medical overview",
             f"{clean_query} treatment guidelines",
@@ -69,39 +75,38 @@ def generate_search_queries(query: str, focus_area: str) -> List[str]:
 
 def search_with_tavily(queries: List[str]) -> List[Dict[str, Any]]:
     """
-    Search using Tavily API — best option for AI agents.
-    No rate limiting, high quality medical results.
+    Execute web searches using Tavily API.
+
+    Tavily is purpose-built for AI agents:
+    - No rate limiting
+    - Returns clean, relevant content
+    - Filters out low quality pages automatically
+    - Free tier: 1000 searches/month
 
     Args:
         queries: List of search query strings.
 
     Returns:
-        List of {title, url, snippet} dicts.
+        List of {title, url, snippet, query} dicts.
     """
-    try:
-        from tavily import TavilyClient
-    except ModuleNotFoundError:
-        print("⚠️  Tavily client package is not installed. Falling back to DuckDuckGo.")
-        print("   Install with: pip install tavily")
-        return search_with_duckduckgo(queries)
-
-    client      = TavilyClient(api_key=config.TAVILY_API_KEY)
     all_results = []
-    seen_urls   = set()
+    seen_urls   = set()  # Track URLs to avoid duplicates
 
     for query in queries:
         try:
-            # Tavily search — returns clean, relevant results
-            response = client.search(
-                query=query,
-                max_results=config.SEARCH_MAX_RESULTS,
-                search_depth="basic"  # "basic" is free, "advanced" is paid
+            # Search using Tavily
+            # search_depth="basic" uses free tier credits
+            # search_depth="advanced" gives better results (costs more credits)
+            response = tavily_client.search(
+                query        = query,
+                max_results  = config.SEARCH_MAX_RESULTS,
+                search_depth = "basic"
             )
 
             for r in response.get("results", []):
                 url = r.get("url", "")
 
-                # Skip duplicates
+                # Skip duplicate URLs
                 if url in seen_urls:
                     continue
 
@@ -120,72 +125,7 @@ def search_with_tavily(queries: List[str]) -> List[Dict[str, Any]]:
     return all_results
 
 
-def search_with_duckduckgo(queries: List[str]) -> List[Dict[str, Any]]:
-    """
-    Fallback search using DuckDuckGo.
-    Used only if Tavily API key is not set.
-
-    Args:
-        queries: List of search query strings.
-
-    Returns:
-        List of {title, url, snippet} dicts.
-    """
-    from duckduckgo_search import DDGS
-
-    all_results = []
-    seen_urls   = set()
-
-    for query in queries:
-        # Wait between requests to avoid rate limiting
-        time.sleep(8)
-
-        try:
-            with DDGS() as ddgs:
-                results = list(ddgs.text(
-                    query,
-                    max_results=config.SEARCH_MAX_RESULTS,
-                    backend="lite"
-                ))
-
-                for r in results:
-                    url = r.get("href", "")
-                    if url in seen_urls:
-                        continue
-                    seen_urls.add(url)
-                    all_results.append({
-                        "title":   r.get("title", ""),
-                        "url":     url,
-                        "snippet": r.get("body", ""),
-                        "query":   query
-                    })
-
-        except Exception as e:
-            print(f"⚠️  DuckDuckGo failed for '{query}': {e}")
-            continue
-
-    return all_results
-
-
-def search_web(queries: List[str]) -> List[Dict[str, Any]]:
-    """
-    Main search function — uses Tavily if key is set,
-    falls back to DuckDuckGo otherwise.
-
-    Args:
-        queries: List of search query strings.
-
-    Returns:
-        List of {title, url, snippet} dicts.
-    """
-    if config.TAVILY_API_KEY:
-        print("   Using Tavily Search...")
-        return search_with_tavily(queries)
-    else:
-        print("   Using DuckDuckGo (fallback)...")
-        return search_with_duckduckgo(queries)
-
-
+@trace_agent("search_agent")
 def run_search_agent(state: ResearchState) -> ResearchState:
     """
     Main Search Agent — called by LangGraph as a node.
@@ -205,15 +145,16 @@ def run_search_agent(state: ResearchState) -> ResearchState:
     focus_area = state.get("focus_area", "general")
 
     try:
-        # Step 1: Generate targeted queries
+        # Step 1: Generate targeted search queries
         queries = generate_search_queries(query, focus_area)
         print(f"   Generated {len(queries)} queries")
 
-        # Step 2: Search the web
-        results = search_web(queries)
-        print(f"   Found {len(results)} results")
+        # Step 2: Search using Tavily
+        print("   Searching with Tavily...")
+        results = search_with_tavily(queries)
+        print(f"   ✅ Found {len(results)} results")
 
-        # Step 3: Extract source URLs
+        # Step 3: Extract source URLs for bibliography
         sources = [r["url"] for r in results if r.get("url")]
 
         return {

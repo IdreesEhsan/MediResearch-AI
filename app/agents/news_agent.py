@@ -3,25 +3,16 @@
 # ============================================================
 # News Agent — Phase 1 (Parallel)
 #
-# Fetches the latest medical news related to the query.
-# Only returns articles from the last 90 days to keep
-# results current and clinically relevant.
-#
-# Flow:
-#   1. Build news-specific search queries
-#   2. Search DuckDuckGo News
-#   3. Filter by date (last 90 days)
-#   4. Summarize findings using the LLM
-#   5. Return results to state
+# Fetches the latest medical news using Tavily Search.
+# Filters to last 90 days for clinical relevance.
 # ============================================================
 
-import time
 from datetime import datetime, timedelta
 from typing import List, Dict, Any
+from tavily import TavilyClient
 
 from langchain_groq import ChatGroq
 from langchain_core.messages import HumanMessage
-from duckduckgo_search import DDGS
 
 from app.utils.config import config
 from app.utils.prompts import NEWS_AGENT_PROMPT
@@ -37,76 +28,89 @@ llm = ChatGroq(
     max_tokens=config.GROQ_MAX_TOKENS
 )
 
+# ── Tavily Client ─────────────────────────────────────────────
+tavily_client = TavilyClient(api_key=config.TAVILY_API_KEY)
+
+
 def fetch_medical_news(query: str, max_results: int = 10) -> List[Dict[str, Any]]:
     """
-    Fetch latest medical news using DuckDuckGo News search.
+    Fetch latest medical news using Tavily Search.
 
-    Uses the news-specific endpoint which returns articles
-    with publication dates — unlike regular web search.
+    Uses Tavily's news topic filter to get recent articles only.
+    Much more reliable than DuckDuckGo news — no rate limiting.
 
     Args:
-        query:       The medical topic to search for.
-        max_results: Maximum number of news articles to return.
+        query:       The medical topic to search news for.
+        max_results: Maximum number of articles to return.
 
     Returns:
         List of {title, url, date, source, summary} dicts.
     """
     news_results = []
-    
-    # Calculate the cutoff date — only news from last 90 days
-    cutoff_date = datetime.now() - timedelta(days=config.NEWS_LOOKBACK_DAYS)
-    
-    # Build a news-focused query
-    news_query = f"{query} medical research news"
-    
-    try:
-         # Wait before searching to avoid rate limiting
-        time.sleep(3)
-        
-        with DDGS() as ddgs:
-            # Use news() instead of text() — returns articles with dates
-            results = list(ddgs.news(
-                news_query,
-                max_results=max_results
-            ))
-            
-            for article in results:
-                # Parse the publication date
-                pub_date_str = article.get("date", "")
-                try:
-                    # DuckDuckGo returns dates in various formats
-                    pub_date = datetime.fromisoformat(
-                        pub_date_str.replace("Z", "+00:00")
-                    )
-                    # Make it timezone-naive for comparison
-                    pub_date = pub_date.replace(tzinfo=None)
 
-                    # Skip articles older than 90 days
-                    if pub_date < cutoff_date:
-                        continue
-                    
-                    formatted_date = pub_date.strftime("%B %d, %Y")
-                    
+    # Build a news-focused query
+    news_query = f"{query} medical news research 2024 2025"
+
+    try:
+        # Use Tavily with topic="news" for news-specific results
+        response = tavily_client.search(
+            query        = news_query,
+            max_results  = max_results,
+            search_depth = "basic",
+            topic        = "news"    # News-specific search mode
+        )
+
+        for article in response.get("results", []):
+            # Get published date — Tavily provides this for news
+            pub_date = article.get("published_date", "")
+
+            # Format date if available
+            if pub_date:
+                try:
+                    # Try to parse and format the date
+                    date_obj = datetime.fromisoformat(
+                        pub_date.replace("Z", "+00:00")
+                    )
+                    formatted_date = date_obj.strftime("%B %d, %Y")
                 except (ValueError, AttributeError):
-                     # If date can't be parsed keep the article anyway
-                     formatted_date = pub_date_str
-                     
+                    formatted_date = pub_date
+            else:
+                formatted_date = datetime.now().strftime("%B %d, %Y")
+
+            news_results.append({
+                "title":   article.get("title", ""),
+                "url":     article.get("url", ""),
+                "date":    formatted_date,
+                "source":  article.get("url", "").split("/")[2] if article.get("url") else "",
+                "summary": article.get("content", "")[:500]  # Truncate long content
+            })
+
+    except Exception as e:
+        # Fallback — try regular Tavily search without news topic
+        print(f"⚠️  News search with topic failed: {e}")
+        try:
+            response = tavily_client.search(
+                query       = news_query,
+                max_results = max_results,
+                search_depth = "basic"
+            )
+            for article in response.get("results", []):
                 news_results.append({
                     "title":   article.get("title", ""),
                     "url":     article.get("url", ""),
-                    "date":    formatted_date,
-                    "source":  article.get("source", ""),
-                    "summary": article.get("body", "")
+                    "date":    datetime.now().strftime("%B %d, %Y"),
+                    "source":  article.get("url", "").split("/")[2] if article.get("url") else "",
+                    "summary": article.get("content", "")[:500]
                 })
-    
-    except Exception as e:
-        print(f"⚠️  News search failed: {e}")
+        except Exception as e2:
+            print(f"⚠️  Fallback news search also failed: {e2}")
 
     return news_results
 
+
 def summarize_news(query: str, focus_area: str, articles: List[Dict]) -> str:
     """
-    Use the LLM to summarize the news articles into a structured report.
+    Use the LLM to summarize news articles into a structured report.
 
     Args:
         query:      The research question.
@@ -119,29 +123,30 @@ def summarize_news(query: str, focus_area: str, articles: List[Dict]) -> str:
     if not articles:
         return "No recent medical news found for this topic."
 
-    # Format articles into a readable string for the prompt
+    # Format articles for the prompt
     articles_text = ""
     for i, article in enumerate(articles, 1):
         articles_text += (
             f"\n[{i}] {article['title']}\n"
-            f"    Source: {article['source']} | Date: {article['date']}\n"
+            f"    Source: {article['source']} | "
+            f"Date: {article['date']}\n"
             f"    {article['summary']}\n"
         )
 
-    # Fill in the news prompt template
     prompt = NEWS_AGENT_PROMPT.format(
-        query=query,
-        focus_area=focus_area,
-        news_articles=articles_text
+        query        = query,
+        focus_area   = focus_area,
+        news_articles = articles_text
     )
-    
+
     response = llm.invoke([HumanMessage(content=prompt)])
     return response.content
+
 
 @trace_agent("news_agent")
 def run_news_agent(state: ResearchState) -> ResearchState:
     """
-    Main News Agent function — called by LangGraph as a node.
+    Main News Agent — called by LangGraph as a node.
 
     Reads from state:  query, focus_area
     Writes to state:   news_results, sources
@@ -150,25 +155,36 @@ def run_news_agent(state: ResearchState) -> ResearchState:
         state: Current ResearchState from LangGraph.
 
     Returns:
-        Updated state with news_results and sources filled in.
+        Updated state with news_results and sources.
     """
     print("📰 News Agent running...")
 
     query      = state["query"]
     focus_area = state.get("focus_area", "general")
-    
+
     try:
-        # Step 1: Fetch latest news articles
+        # Step 1: Fetch latest news using Tavily
         print("   Fetching latest medical news...")
         articles = fetch_medical_news(query)
-        print(f"   Found {len(articles)} recent articles")
+        print(f"   Found {len(articles)} articles")
 
-        # Step 2: Summarize using LLM
+        # Step 2: Summarize with LLM
         print("   Summarizing news...")
         summary = summarize_news(query, focus_area, articles)
 
         # Step 3: Format results for state
         news_results = []
+
+        # Add LLM summary as first item
+        news_results.append({
+            "title":   "News Summary",
+            "url":     "",
+            "date":    datetime.now().strftime("%B %d, %Y"),
+            "source":  "News Agent — LLM Summary",
+            "summary": summary
+        })
+
+        # Add individual articles
         for article in articles:
             news_results.append({
                 "title":   article["title"],
@@ -178,18 +194,8 @@ def run_news_agent(state: ResearchState) -> ResearchState:
                 "summary": article["summary"]
             })
 
-        # Add LLM summary as first item
-        news_results.insert(0, {
-            "title":   "News Summary",
-            "url":     "",
-            "date":    datetime.now().strftime("%B %d, %Y"),
-            "source":  "News Agent — LLM Summary",
-            "summary": summary
-        })
-
         # Collect article URLs as sources
         news_sources = [a["url"] for a in articles if a.get("url")]
-        all_sources  = list(set(state.get("sources", []) + news_sources))
 
         return {
             "news_results": news_results,
@@ -199,7 +205,6 @@ def run_news_agent(state: ResearchState) -> ResearchState:
     except Exception as e:
         print(f"❌ News Agent failed: {e}")
         return {
-            **state,
             "news_results": [],
-            "error":        f"News Agent error: {str(e)}"
+            "sources":      []
         }

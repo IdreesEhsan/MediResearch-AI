@@ -110,6 +110,7 @@ def format_sources_for_check(search_results: List[Dict], rag_results: List[Dict]
 
     return sources_text
 
+@trace_agent("factcheck_agent")
 def run_factcheck_agent(state: ResearchState) -> ResearchState:
     """
     Main Fact-Check Agent — called by LangGraph as a node.
