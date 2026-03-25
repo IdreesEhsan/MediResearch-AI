@@ -1,0 +1,299 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Research Report — MediResearch AI</title>
+
+    <!-- Bootstrap 5 -->
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <!-- Bootstrap Icons -->
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css"
+      rel="stylesheet"
+    />
+    <!-- Custom Styles -->
+    <link href="css/style.css" rel="stylesheet" />
+  </head>
+  <body>
+    <!-- ── NAVBAR ─────────────────────────────────────────────── -->
+    <nav class="navbar navbar-expand-lg">
+      <div class="container">
+        <a class="navbar-brand" href="index.html">
+          <i class="bi bi-heart-pulse-fill"></i>
+          MediResearch <span>AI</span>
+        </a>
+        <button
+          class="navbar-toggler"
+          type="button"
+          data-bs-toggle="collapse"
+          data-bs-target="#navMenu"
+        >
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navMenu">
+          <ul class="navbar-nav ms-auto align-items-center gap-1">
+            <li class="nav-item">
+              <a class="nav-link" href="index.html">
+                <i class="bi bi-search"></i> Research
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="sessions.html">
+                <i class="bi bi-clock-history"></i> History
+              </a>
+            </li>
+            <li class="nav-item ms-2">
+              <div class="navbar-status">
+                <div class="status-dot" id="apiStatusDot"></div>
+                <span id="apiStatusText">Connecting...</span>
+              </div>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+
+    <!-- ── REPORT HEADER ──────────────────────────────────────── -->
+    <section class="hero-section">
+      <div class="container">
+        <div class="hero-badge">
+          <i class="bi bi-file-earmark-medical-fill"></i>
+          Doctor Approved Research Report
+        </div>
+        <h1 class="hero-title" id="reportTitle">Medical Research Report</h1>
+        <p class="hero-subtitle" id="reportSubtitle">Loading report...</p>
+      </div>
+    </section>
+
+    <!-- ── MAIN CONTENT ───────────────────────────────────────── -->
+    <div class="container py-4">
+      <!-- Loading State -->
+      <div id="loadingState" class="text-center py-5">
+        <div class="spinner-medical mb-3"></div>
+        <p class="text-muted">Loading report...</p>
+      </div>
+
+      <!-- Error State -->
+      <div id="errorState" style="display: none">
+        <div class="card">
+          <div class="card-body text-center py-5">
+            <div style="font-size: 3rem; margin-bottom: 1rem">⚠️</div>
+            <h5 class="text-danger fw-bold">Report Not Found</h5>
+            <p class="text-muted mb-3" id="errorMessage">
+              Could not load the report.
+            </p>
+            <a href="sessions.html" class="btn btn-primary">
+              <i class="bi bi-clock-history"></i>
+              Browse Sessions
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Report Content -->
+      <div id="reportContent" style="display: none">
+        <div class="row g-4">
+          <!-- ── LEFT: Report Meta + Actions ───────────── -->
+          <div class="col-lg-4">
+            <!-- Report Info Card -->
+            <div class="card mb-4" style="position: sticky; top: 80px">
+              <div class="card-header-custom">
+                <i class="bi bi-info-circle-fill"></i>
+                Report Information
+              </div>
+              <div class="card-body">
+                <!-- Confidence Score -->
+                <div class="text-center mb-3">
+                  <div
+                    class="confidence-circle mx-auto mb-2"
+                    id="confidenceCircle"
+                  >
+                    <span id="confidenceScore">--</span>
+                    <span class="confidence-label">/ 100</span>
+                  </div>
+                  <div class="fw-bold" id="confidenceLabel">
+                    AI Confidence Score
+                  </div>
+                  <div class="text-muted small">
+                    Based on fact-check validation
+                  </div>
+                </div>
+
+                <div class="divider"></div>
+
+                <!-- Meta Details -->
+                <div
+                  class="d-flex flex-column gap-2"
+                  style="font-size: 0.875rem"
+                >
+                  <div class="d-flex justify-content-between">
+                    <span class="text-muted">Focus Area</span>
+                    <span class="fw-semibold" id="focusAreaBadge">--</span>
+                  </div>
+
+                  <div class="d-flex justify-content-between">
+                    <span class="text-muted">Status</span>
+                    <span class="text-success fw-semibold">
+                      <i class="bi bi-check-circle-fill"></i>
+                      Approved
+                    </span>
+                  </div>
+
+                  <div class="d-flex justify-content-between">
+                    <span class="text-muted">Sources</span>
+                    <span class="fw-semibold" id="sourceCount">--</span>
+                  </div>
+
+                  <div class="d-flex justify-content-between">
+                    <span class="text-muted">Session ID</span>
+                    <span
+                      class="mono text-muted"
+                      style="font-size: 0.75rem"
+                      id="sessionIdShort"
+                      >--</span
+                    >
+                  </div>
+                </div>
+
+                <div class="divider"></div>
+
+                <!-- Export Buttons -->
+                <div class="section-title">
+                  <i class="bi bi-download"></i>
+                  Export Report
+                </div>
+                <div class="d-flex flex-column gap-2">
+                  <button
+                    class="btn btn-outline-primary w-100"
+                    id="pdfBtn"
+                    onclick="downloadReport('pdf')"
+                  >
+                    <i class="bi bi-file-earmark-pdf-fill text-danger"></i>
+                    Download PDF
+                  </button>
+                  <button
+                    class="btn btn-outline-primary w-100"
+                    id="wordBtn"
+                    onclick="downloadReport('word')"
+                  >
+                    <i class="bi bi-file-earmark-word-fill text-primary"></i>
+                    Download Word
+                  </button>
+                </div>
+
+                <div class="divider"></div>
+
+                <!-- Actions -->
+                <div class="d-flex flex-column gap-2">
+                  <a href="index.html" class="btn btn-primary w-100">
+                    <i class="bi bi-play-fill"></i>
+                    New Research
+                  </a>
+                  <a href="sessions.html" class="btn btn-outline-primary w-100">
+                    <i class="bi bi-clock-history"></i>
+                    View History
+                  </a>
+                  <button
+                    class="btn btn-outline-primary w-100"
+                    onclick="printReport()"
+                  >
+                    <i class="bi bi-printer-fill"></i>
+                    Print Report
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ── RIGHT: Full Report ─────────────────────── -->
+          <div class="col-lg-8">
+            <!-- Approval Stamp -->
+            <div class="alert-medical success mb-4">
+              <i class="bi bi-patch-check-fill fs-5"></i>
+              <div>
+                <strong>Doctor Approved</strong> — This report has been reviewed
+                and approved by a qualified medical professional before
+                delivery.
+              </div>
+            </div>
+
+            <!-- Report Body -->
+            <div class="card mb-4">
+              <div class="card-header-custom">
+                <i class="bi bi-file-earmark-text-fill"></i>
+                Full Report
+                <button
+                  class="btn btn-sm ms-auto"
+                  style="
+                    background: rgba(255, 255, 255, 0.2);
+                    color: white;
+                    font-size: 0.8rem;
+                  "
+                  onclick="copyReport()"
+                  id="copyBtn"
+                >
+                  <i class="bi bi-clipboard"></i> Copy
+                </button>
+              </div>
+              <div class="card-body">
+                <div id="reportBody"></div>
+              </div>
+            </div>
+
+            <!-- Sources -->
+            <div class="card mb-4" id="sourcesCard" style="display: none">
+              <div class="card-header-custom">
+                <i class="bi bi-link-45deg"></i>
+                Sources & References
+              </div>
+              <div class="card-body">
+                <ol
+                  id="sourcesList"
+                  style="font-size: 0.875rem; padding-left: 1.2rem"
+                ></ol>
+              </div>
+            </div>
+
+            <!-- Disclaimer -->
+            <div class="disclaimer-banner">
+              <i class="bi bi-exclamation-triangle-fill fs-5"></i>
+              <div>
+                <strong>Medical Disclaimer:</strong>
+                This report is generated by an AI system for research and
+                educational purposes only. It does not constitute medical
+                advice. Always consult a qualified medical professional for
+                clinical decisions.
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── FOOTER ─────────────────────────────────────────────── -->
+    <footer class="footer mt-5">
+      <div class="container">
+        <div
+          class="d-flex justify-content-between align-items-center flex-wrap gap-2"
+        >
+          <div>
+            <strong class="text-white">MediResearch AI</strong> — Multi-Agent
+            Medical Research Assistant
+          </div>
+          <div>⚠️ For research purposes only. Not medical advice.</div>
+        </div>
+      </div>
+    </footer>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- API Client -->
+    <script src="js/api.js"></script>
+    <!-- Page Logic -->
+    <script src="js/report.js"></script>
+  </body>
+</html>
