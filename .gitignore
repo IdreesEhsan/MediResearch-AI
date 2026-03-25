@@ -2,3 +2,4 @@
 .env
 venv
 .env.example
+PROJECT_STRUCTURE.md
