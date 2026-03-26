@@ -53,27 +53,29 @@ def run_research_background(session_id: str, query: str, focus_area: str):
 
         from app.graph.workflow import run_research
 
+        # No HITL — run fully automatically
         result = run_research(
             query=query,
             focus_area=focus_area,
-            session_id=session_id,
-            auto_approve=False
+            session_id=session_id
         )
 
         active_sessions[session_id].update({
-            "status": "paused",
-            "current_agent": "hitl_node",
+            "status": "completed",
+            "current_agent": "done",
             "state": result,
             "confidence_score": result.get("confidence_score", 0),
             "summary": result.get("summary", ""),
+            "final_report": result.get("final_report", ""),
+            "export_pdf_path": result.get("export_pdf_path"),
+            "export_word_path": result.get("export_word_path"),
         })
 
     except Exception as e:
         active_sessions[session_id]["status"] = "failed"
         active_sessions[session_id]["error"] = str(e)
         print(f"❌ Background research failed: {e}")
-
-
+        
 # ════════════════════════════════════════════════════════════════
 # RESEARCH ENDPOINTS
 # ════════════════════════════════════════════════════════════════
