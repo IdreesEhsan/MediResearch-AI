@@ -20,14 +20,6 @@
         <a class="navbar-brand" href="index.html">
           <i class="bi bi-heart-pulse-fill"></i> MediResearch <span>AI</span>
         </a>
-        <button
-          class="navbar-toggler"
-          type="button"
-          data-bs-toggle="collapse"
-          data-bs-target="#navMenu"
-        >
-          <span class="navbar-toggler-icon"></span>
-        </button>
         <div class="collapse navbar-collapse" id="navMenu">
           <ul class="navbar-nav ms-auto align-items-center gap-1">
             <li class="nav-item">
@@ -60,14 +52,14 @@
         <h1 class="hero-title">Medical Research Assistant</h1>
         <p class="hero-subtitle">
           Ask any medical question. 8 AI agents research, validate, and deliver
-          a doctor-approved report.
+          a report.
         </p>
       </div>
     </section>
 
     <div class="container py-4">
       <div class="row g-4">
-        <!-- Left Column -->
+        <!-- Left Column - Query -->
         <div class="col-lg-5">
           <div class="card mb-4">
             <div class="card-header-custom">
@@ -80,15 +72,17 @@
                 rows="4"
                 placeholder="e.g. What are the latest treatment options for Type 2 Diabetes?"
               ></textarea>
+
               <div class="mt-3">
                 <label class="form-label">Focus Area</label>
                 <select class="form-select" id="focusArea">
                   <option value="general">🔬 General Medical</option>
-                  <option value="disease">🦠 Disease</option>
+                  <option value="disease" selected>🦠 Disease</option>
                   <option value="drug">💊 Drug / Treatment</option>
                   <option value="news">📰 Latest News</option>
                 </select>
               </div>
+
               <button
                 class="btn btn-primary w-100 btn-lg mt-4"
                 id="startBtn"
@@ -110,15 +104,14 @@
               >
             </div>
             <div class="card-body">
-              <div class="agent-pipeline" id="agentPipeline">
-                <!-- Populated by JS -->
-              </div>
+              <div class="agent-pipeline" id="agentPipeline"></div>
             </div>
           </div>
         </div>
 
-        <!-- Right Column -->
+        <!-- Right Column - Dynamic Content -->
         <div class="col-lg-7">
+          <!-- Welcome -->
           <div id="welcomeState" class="card">
             <div class="card-body text-center py-5">
               <h4>Welcome to MediResearch AI</h4>
@@ -128,6 +121,7 @@
             </div>
           </div>
 
+          <!-- Loading -->
           <div id="loadingState" class="card" style="display: none">
             <div class="card-body text-center py-5">
               <div class="spinner-medical mb-3"></div>
@@ -136,12 +130,35 @@
             </div>
           </div>
 
-          <div id="hitlPanel" style="display: none">
-            <!-- HITL panel will be populated by JS -->
-          </div>
-
-          <div id="reportPanel" style="display: none">
-            <!-- Report panel will be populated by JS -->
+          <!-- Report Panel (Single, clean version) -->
+          <div id="reportPanel" class="card shadow-sm" style="display: none">
+            <div
+              class="card-header bg-success text-white d-flex justify-content-between align-items-center"
+            >
+              <h5 class="mb-0">
+                <i class="bi bi-file-text"></i> Research Report
+              </h5>
+              <div>
+                <button
+                  onclick="downloadReport()"
+                  class="btn btn-light btn-sm me-2"
+                >
+                  <i class="bi bi-download"></i> Download PDF
+                </button>
+                <button onclick="copyReport()" class="btn btn-light btn-sm">
+                  <i class="bi bi-clipboard"></i> Copy
+                </button>
+              </div>
+            </div>
+            <div class="card-body">
+              <div
+                id="reportContent"
+                class="report-content"
+                style="line-height: 1.7; min-height: 400px"
+              >
+                <!-- Report content injected here -->
+              </div>
+            </div>
           </div>
         </div>
       </div>
