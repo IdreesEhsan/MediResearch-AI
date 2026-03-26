@@ -1,46 +1,16 @@
-// frontend/js/research.js
 let currentSessionId = null;
 let pollingInterval = null;
 
 document.addEventListener('DOMContentLoaded', async () => {
     await checkAPIHealth();
-
-    // Load query from sessions page if continuing
-    const continueQuery = sessionStorage.getItem('continueQuery');
-    const continueFocus = sessionStorage.getItem('continueFocusArea');
-    if (continueQuery) {
-        document.getElementById('queryInput').value = continueQuery;
-        document.getElementById('focusArea').value = continueFocus || 'general';
-        sessionStorage.removeItem('continueQuery');
-        sessionStorage.removeItem('continueFocusArea');
-    }
-
-    const savedSession = sessionStorage.getItem('currentSessionId');
-    if (savedSession) {
-        currentSessionId = savedSession;
-        resumeSession(savedSession);
-    }
 });
-
-async function checkAPIHealth() {
-    const dot = document.getElementById('apiStatusDot');
-    const text = document.getElementById('apiStatusText');
-    try {
-        await checkHealth();
-        if (dot) dot.style.background = '#34d399';
-        if (text) text.textContent = 'API Online';
-    } catch (error) {
-        if (dot) dot.style.background = '#f87171';
-        if (text) text.textContent = 'API Offline';
-    }
-}
 
 async function startResearch() {
     const query = document.getElementById('queryInput').value.trim();
     const focus_area = document.getElementById('focusArea').value;
 
     if (!query || query.length < 10) {
-        showToast('Please enter a detailed research question (at least 10 characters)', 'warning');
+        showToast('Please enter a detailed research question', 'warning');
         return;
     }
 
@@ -67,6 +37,7 @@ async function startResearch() {
     }
 }
 
+// Show Progress Panel
 function showProgressPanel() {
     const panel = document.getElementById('progressCard');
     if (panel) panel.style.display = 'block';
@@ -94,6 +65,7 @@ function resetStartButton() {
     }
 }
 
+// Main Polling Function
 function startPolling() {
     if (pollingInterval) clearInterval(pollingInterval);
 
@@ -105,21 +77,23 @@ function startPolling() {
                 updateLoadingMessage(status.current_agent);
             }
 
-            if (status.status === 'paused') {
-                clearInterval(pollingInterval);
-                await showHITLPanel();
-            } else if (status.status === 'completed') {
+            // Check if research is completed
+            if (status.status === 'completed') {
                 clearInterval(pollingInterval);
                 await showReportPanel();
-            } else if (status.status === 'failed') {
+            } 
+            // If failed
+            else if (status.status === 'failed') {
                 clearInterval(pollingInterval);
                 showToast('Research failed', 'danger');
                 showState('welcome');
+                resetStartButton();
             }
+
         } catch (error) {
             console.error("Polling error:", error);
         }
-    }, 2500); // Poll every 2.5 seconds
+    }, 2000); // Poll every 2 seconds
 }
 
 function updateLoadingMessage(agent) {
@@ -128,23 +102,28 @@ function updateLoadingMessage(agent) {
         'search_agent': 'Searching the web...',
         'rag_agent': 'Querying knowledge base...',
         'news_agent': 'Fetching latest news...',
-        'summarizer_agent': 'Synthesizing all sources...',
+        'summarizer_agent': 'Synthesizing findings...',
         'factcheck_agent': 'Fact-checking claims...',
-        'hitl_node': 'Waiting for doctor review...',
         'report_agent': 'Generating final report...',
         'export_agent': 'Creating PDF and Word files...'
     };
     setLoadingMessage(messages[agent] || 'Processing...', '');
 }
 
-async function showHITLPanel() {
-    showState('hitl');
-    showToast('Research paused for doctor approval', 'warning');
-}
-
 async function showReportPanel() {
-    showState('report');
-    showToast('Research completed! Report ready.', 'success');
+    try {
+        const report = await getReport(currentSessionId);
+        showState('report');
+
+        // You can expand this later to show the actual report content
+        console.log("Report received:", report);
+
+        showToast('Research completed! Report is ready.', 'success');
+        resetStartButton();
+
+    } catch (error) {
+        showToast('Failed to load report', 'danger');
+    }
 }
 
 function showToast(message, type = 'info') {
