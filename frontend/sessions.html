@@ -4,27 +4,21 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Research History — MediResearch AI</title>
-
-    <!-- Bootstrap 5 -->
     <link
       href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
       rel="stylesheet"
     />
-    <!-- Bootstrap Icons -->
     <link
       href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css"
       rel="stylesheet"
     />
-    <!-- Custom Styles -->
     <link href="css/style.css" rel="stylesheet" />
   </head>
   <body>
-    <!-- ── NAVBAR ─────────────────────────────────────────────── -->
     <nav class="navbar navbar-expand-lg">
       <div class="container">
         <a class="navbar-brand" href="index.html">
-          <i class="bi bi-heart-pulse-fill"></i>
-          MediResearch <span>AI</span>
+          <i class="bi bi-heart-pulse-fill"></i> MediResearch <span>AI</span>
         </a>
         <button
           class="navbar-toggler"
@@ -37,14 +31,14 @@
         <div class="collapse navbar-collapse" id="navMenu">
           <ul class="navbar-nav ms-auto align-items-center gap-1">
             <li class="nav-item">
-              <a class="nav-link" href="index.html">
-                <i class="bi bi-search"></i> Research
-              </a>
+              <a class="nav-link" href="index.html"
+                ><i class="bi bi-search"></i> Research</a
+              >
             </li>
             <li class="nav-item">
-              <a class="nav-link active" href="sessions.html">
-                <i class="bi bi-clock-history"></i> History
-              </a>
+              <a class="nav-link active" href="sessions.html"
+                ><i class="bi bi-clock-history"></i> History</a
+              >
             </li>
             <li class="nav-item ms-2">
               <div class="navbar-status">
@@ -57,38 +51,32 @@
       </div>
     </nav>
 
-    <!-- ── HERO ───────────────────────────────────────────────── -->
     <section class="hero-section">
       <div class="container">
         <div class="hero-badge">
-          <i class="bi bi-clock-history"></i>
-          Session Memory — Persistent Research History
+          <i class="bi bi-clock-history"></i> Session Memory
         </div>
         <h1 class="hero-title">Research History</h1>
         <p class="hero-subtitle">
-          Browse, search, and reload your past research sessions. Continue prior
-          research with full context injection.
+          Browse, search, and continue your previous research sessions.
         </p>
       </div>
     </section>
 
-    <!-- ── MAIN CONTENT ───────────────────────────────────────── -->
     <div class="container py-4">
       <div class="row g-4">
-        <!-- ── LEFT: Search + Stats ───────────────────────── -->
+        <!-- Left Sidebar -->
         <div class="col-lg-4">
-          <!-- Search Box -->
           <div class="card mb-4">
             <div class="card-header-custom">
-              <i class="bi bi-search"></i>
-              Search Sessions
+              <i class="bi bi-search"></i> Search Sessions
             </div>
             <div class="card-body">
               <div class="input-group">
                 <input
                   type="text"
-                  class="form-control"
                   id="searchInput"
+                  class="form-control"
                   placeholder="Search by topic..."
                   onkeyup="handleSearch(event)"
                 />
@@ -99,201 +87,93 @@
                   <i class="bi bi-search"></i>
                 </button>
               </div>
-              <div class="mt-2">
-                <button
-                  class="btn btn-outline-primary btn-sm w-100"
-                  onclick="clearSearch()"
-                >
-                  <i class="bi bi-arrow-counterclockwise"></i>
-                  Show All Sessions
-                </button>
-              </div>
+              <button
+                class="btn btn-outline-primary btn-sm w-100 mt-2"
+                onclick="clearSearch()"
+              >
+                Show All Sessions
+              </button>
             </div>
           </div>
 
-          <!-- Stats Card -->
+          <!-- Stats -->
           <div class="card mb-4">
             <div class="card-header-custom">
-              <i class="bi bi-bar-chart-fill"></i>
-              Research Stats
+              <i class="bi bi-bar-chart-fill"></i> Research Stats
             </div>
             <div class="card-body">
-              <div class="row g-3 text-center">
+              <div class="row text-center g-3">
                 <div class="col-6">
-                  <div
-                    style="
-                      font-size: 1.8rem;
-                      font-weight: 800;
-                      color: var(--primary);
-                    "
-                    id="totalSessions"
-                  >
-                    --
+                  <div class="fw-bold fs-3 text-primary" id="totalSessions">
+                    0
                   </div>
-                  <div class="text-muted" style="font-size: 0.75rem">
-                    Total Sessions
-                  </div>
+                  <small class="text-muted">Total Sessions</small>
                 </div>
                 <div class="col-6">
-                  <div
-                    style="font-size: 1.8rem; font-weight: 800; color: #057a55"
-                    id="approvedSessions"
-                  >
-                    --
+                  <div class="fw-bold fs-3 text-success" id="approvedSessions">
+                    0
                   </div>
-                  <div class="text-muted" style="font-size: 0.75rem">
-                    Approved
-                  </div>
+                  <small class="text-muted">Approved</small>
                 </div>
                 <div class="col-6">
-                  <div
-                    style="
-                      font-size: 1.8rem;
-                      font-weight: 800;
-                      color: var(--warning);
-                    "
-                    id="avgConfidence"
-                  >
+                  <div class="fw-bold fs-3 text-warning" id="avgConfidence">
                     --
                   </div>
-                  <div class="text-muted" style="font-size: 0.75rem">
-                    Avg Confidence
-                  </div>
+                  <small class="text-muted">Avg Confidence</small>
                 </div>
                 <div class="col-6">
-                  <div
-                    style="
-                      font-size: 1.8rem;
-                      font-weight: 800;
-                      color: var(--secondary);
-                    "
-                    id="withReports"
-                  >
-                    --
-                  </div>
-                  <div class="text-muted" style="font-size: 0.75rem">
-                    With Reports
-                  </div>
+                  <div class="fw-bold fs-3 text-info" id="withReports">0</div>
+                  <small class="text-muted">With Reports</small>
                 </div>
               </div>
-            </div>
-          </div>
-
-          <!-- Filter by Focus Area -->
-          <div class="card">
-            <div class="card-header-custom">
-              <i class="bi bi-funnel-fill"></i>
-              Filter by Focus Area
-            </div>
-            <div class="card-body d-flex flex-wrap gap-2">
-              <button
-                class="btn btn-sm btn-outline-primary active"
-                onclick="filterByFocus('all', this)"
-              >
-                All
-              </button>
-              <button
-                class="btn btn-sm"
-                style="background: #dbeafe; color: #1e40af"
-                onclick="filterByFocus('disease', this)"
-              >
-                🦠 Disease
-              </button>
-              <button
-                class="btn btn-sm"
-                style="background: #d1fae5; color: #065f46"
-                onclick="filterByFocus('drug', this)"
-              >
-                💊 Drug
-              </button>
-              <button
-                class="btn btn-sm"
-                style="background: #fef3c7; color: #92400e"
-                onclick="filterByFocus('news', this)"
-              >
-                📰 News
-              </button>
-              <button
-                class="btn btn-sm"
-                style="background: #f3e8ff; color: #6b21a8"
-                onclick="filterByFocus('general', this)"
-              >
-                🔬 General
-              </button>
             </div>
           </div>
         </div>
 
-        <!-- ── RIGHT: Session List ────────────────────────── -->
+        <!-- Right: Session List -->
         <div class="col-lg-8">
-          <!-- List Header -->
           <div class="d-flex justify-content-between align-items-center mb-3">
-            <div class="section-title mb-0">
-              <i class="bi bi-list-ul"></i>
-              <span id="listTitle">All Sessions</span>
-              <span class="badge bg-primary ms-1" id="sessionCount">0</span>
-            </div>
-            <div class="d-flex gap-2">
-              <select
-                class="form-select form-select-sm"
-                style="width: auto"
-                onchange="sortSessions(this.value)"
-              >
-                <option value="newest">Newest First</option>
-                <option value="oldest">Oldest First</option>
-                <option value="confidence">By Confidence</option>
-              </select>
-            </div>
+            <h5 class="mb-0" id="listTitle">All Sessions</h5>
+            <span class="badge bg-primary" id="sessionCount">0</span>
           </div>
 
-          <!-- Loading State -->
           <div id="sessionsLoading" class="text-center py-5">
             <div class="spinner-medical mb-3"></div>
             <p class="text-muted">Loading sessions...</p>
           </div>
 
-          <!-- Empty State -->
-          <div id="sessionsEmpty" style="display: none">
-            <div class="card">
-              <div class="card-body text-center py-5">
-                <div style="font-size: 3rem; margin-bottom: 1rem">📭</div>
-                <h5 class="text-navy fw-bold">No Sessions Found</h5>
-                <p class="text-muted mb-3">
-                  Start your first research query to build your history.
-                </p>
-                <a href="index.html" class="btn btn-primary">
-                  <i class="bi bi-play-fill"></i>
-                  Start Research
-                </a>
-              </div>
-            </div>
+          <div
+            id="sessionsEmpty"
+            style="display: none"
+            class="text-center py-5"
+          >
+            <h5>No sessions found</h5>
+            <a href="index.html" class="btn btn-primary">Start New Research</a>
           </div>
 
-          <!-- Sessions List -->
           <div id="sessionsList"></div>
 
           <!-- Pagination -->
           <div
-            class="d-flex justify-content-between align-items-center mt-4"
             id="pagination"
-            style="display: none !important"
+            class="d-flex justify-content-between align-items-center mt-4"
+            style="display: none"
           >
-            <div class="text-muted small" id="paginationInfo"></div>
-            <div class="d-flex gap-2">
+            <div id="paginationInfo" class="text-muted small"></div>
+            <div class="btn-group">
               <button
-                class="btn btn-sm btn-outline-primary"
+                class="btn btn-outline-primary btn-sm"
                 id="prevBtn"
                 onclick="changePage(-1)"
-                disabled
               >
-                <i class="bi bi-chevron-left"></i> Prev
+                Prev
               </button>
               <button
-                class="btn btn-sm btn-outline-primary"
+                class="btn btn-outline-primary btn-sm"
                 id="nextBtn"
                 onclick="changePage(1)"
               >
-                Next <i class="bi bi-chevron-right"></i>
+                Next
               </button>
             </div>
           </div>
@@ -301,21 +181,12 @@
       </div>
     </div>
 
-    <!-- ── DELETE CONFIRMATION MODAL ─────────────────────────── -->
+    <!-- Delete Modal -->
     <div class="modal fade" id="deleteModal" tabindex="-1">
-      <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content" style="border-radius: var(--radius)">
-          <div
-            class="modal-header"
-            style="
-              background: var(--danger-light);
-              border-bottom: 1px solid var(--danger);
-            "
-          >
-            <h5 class="modal-title text-danger">
-              <i class="bi bi-trash-fill"></i>
-              Delete Session
-            </h5>
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title text-danger">Delete Session?</h5>
             <button
               type="button"
               class="btn-close"
@@ -323,13 +194,12 @@
             ></button>
           </div>
           <div class="modal-body">
-            <p>Are you sure you want to delete this session?</p>
-            <p class="text-muted small mb-0" id="deleteSessionInfo"></p>
+            <p id="deleteSessionInfo"></p>
           </div>
           <div class="modal-footer">
             <button
               type="button"
-              class="btn btn-outline-secondary"
+              class="btn btn-secondary"
               data-bs-dismiss="modal"
             >
               Cancel
@@ -339,42 +209,30 @@
               class="btn btn-danger"
               onclick="confirmDelete()"
             >
-              <i class="bi bi-trash-fill"></i> Delete
+              Delete
             </button>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- ── SESSION DETAIL MODAL ───────────────────────────────── -->
+    <!-- Session Detail Modal -->
     <div class="modal fade" id="sessionModal" tabindex="-1">
-      <div
-        class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable"
-      >
-        <div class="modal-content" style="border-radius: var(--radius)">
-          <div
-            class="modal-header card-header-custom"
-            style="border-radius: var(--radius) var(--radius) 0 0"
-          >
-            <h5 class="modal-title">
-              <i class="bi bi-file-earmark-medical-fill"></i>
-              Session Details
-            </h5>
+      <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+          <div class="modal-header card-header-custom">
+            <h5 class="modal-title">Session Details</h5>
             <button
               type="button"
               class="btn-close btn-close-white"
               data-bs-dismiss="modal"
             ></button>
           </div>
-          <div class="modal-body" id="sessionModalBody">
-            <div class="text-center py-4">
-              <div class="spinner-medical"></div>
-            </div>
-          </div>
+          <div class="modal-body" id="sessionModalBody"></div>
           <div class="modal-footer">
             <button
               type="button"
-              class="btn btn-outline-secondary"
+              class="btn btn-secondary"
               data-bs-dismiss="modal"
             >
               Close
@@ -384,7 +242,6 @@
               class="btn btn-primary"
               id="continueResearchBtn"
             >
-              <i class="bi bi-arrow-repeat"></i>
               Continue Research
             </button>
           </div>
@@ -392,26 +249,22 @@
       </div>
     </div>
 
-    <!-- ── FOOTER ─────────────────────────────────────────────── -->
     <footer class="footer mt-5">
       <div class="container">
         <div
           class="d-flex justify-content-between align-items-center flex-wrap gap-2"
         >
           <div>
-            <strong class="text-white">MediResearch AI</strong> — Multi-Agent
-            Medical Research Assistant
+            <strong>MediResearch AI</strong> — Multi-Agent Medical Research
+            Assistant
           </div>
           <div>⚠️ For research purposes only. Not medical advice.</div>
         </div>
       </div>
     </footer>
 
-    <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-    <!-- API Client -->
     <script src="js/api.js"></script>
-    <!-- Page Logic -->
     <script src="js/sessions.js"></script>
   </body>
 </html>

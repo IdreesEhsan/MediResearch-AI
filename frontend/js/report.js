@@ -29,13 +29,19 @@ async function checkAPIHealth() {
     const text = document.getElementById('apiStatusText');
 
     try {
-        await checkHealth();
-        dot.style.background  = '#34d399';  // Green
-        text.textContent      = 'API Online';
+        const health = await checkHealth();
+        if (dot) dot.style.background = '#34d399';
+        if (text) text.textContent = 'API Online';
+        console.log("✅ API Status: Online");
     } catch (error) {
-        dot.style.background  = '#f87171';  // Red
-        text.textContent      = 'API Offline';
-        showToast('Cannot connect to API. Start the server first.', 'danger');
+        if (dot) dot.style.background = '#f87171';
+        if (text) text.textContent = 'API Offline';
+        console.warn("⚠️ API Status: Offline -", error.message);
+        // Optional: show toast only once
+        if (!window.apiStatusToastShown) {
+            showToast('Cannot connect to API. Make sure backend is running on port 8000.', 'warning');
+            window.apiStatusToastShown = true;
+        }
     }
 }
 

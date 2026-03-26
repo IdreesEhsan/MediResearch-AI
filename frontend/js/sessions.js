@@ -30,13 +30,21 @@ document.addEventListener('DOMContentLoaded', async () => {
 async function checkAPIHealth() {
     const dot  = document.getElementById('apiStatusDot');
     const text = document.getElementById('apiStatusText');
+
     try {
-        await checkHealth();
-        dot.style.background = '#34d399';
-        text.textContent     = 'API Online';
-    } catch {
-        dot.style.background = '#f87171';
-        text.textContent     = 'API Offline';
+        const health = await checkHealth();
+        if (dot) dot.style.background = '#34d399';
+        if (text) text.textContent = 'API Online';
+        console.log("✅ API Status: Online");
+    } catch (error) {
+        if (dot) dot.style.background = '#f87171';
+        if (text) text.textContent = 'API Offline';
+        console.warn("⚠️ API Status: Offline -", error.message);
+        // Optional: show toast only once
+        if (!window.apiStatusToastShown) {
+            showToast('Cannot connect to API. Make sure backend is running on port 8000.', 'warning');
+            window.apiStatusToastShown = true;
+        }
     }
 }
 

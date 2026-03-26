@@ -1,457 +1,168 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>MediResearch AI — Medical Research Assistant</title>
-
-    <!-- Bootstrap 5 -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Bootstrap Icons -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
-    <!-- Custom Styles -->
-    <link href="css/style.css" rel="stylesheet">
-</head>
-<body>
-
-<!-- ── NAVBAR ─────────────────────────────────────────────── -->
-<nav class="navbar navbar-expand-lg">
-    <div class="container">
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css"
+      rel="stylesheet"
+    />
+    <link href="css/style.css" rel="stylesheet" />
+  </head>
+  <body>
+    <nav class="navbar navbar-expand-lg">
+      <div class="container">
         <a class="navbar-brand" href="index.html">
-            <i class="bi bi-heart-pulse-fill"></i>
-            MediResearch <span>AI</span>
+          <i class="bi bi-heart-pulse-fill"></i> MediResearch <span>AI</span>
         </a>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navMenu">
-            <span class="navbar-toggler-icon"></span>
+        <button
+          class="navbar-toggler"
+          type="button"
+          data-bs-toggle="collapse"
+          data-bs-target="#navMenu"
+        >
+          <span class="navbar-toggler-icon"></span>
         </button>
         <div class="collapse navbar-collapse" id="navMenu">
-            <ul class="navbar-nav ms-auto align-items-center gap-1">
-                <li class="nav-item">
-                    <a class="nav-link active" href="index.html">
-                        <i class="bi bi-search"></i> Research
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="sessions.html">
-                        <i class="bi bi-clock-history"></i> History
-                    </a>
-                </li>
-                <li class="nav-item ms-2">
-                    <div class="navbar-status">
-                        <div class="status-dot" id="apiStatusDot"></div>
-                        <span id="apiStatusText">Connecting...</span>
-                    </div>
-                </li>
-            </ul>
+          <ul class="navbar-nav ms-auto align-items-center gap-1">
+            <li class="nav-item">
+              <a class="nav-link active" href="index.html"
+                ><i class="bi bi-search"></i> Research</a
+              >
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="sessions.html"
+                ><i class="bi bi-clock-history"></i> History</a
+              >
+            </li>
+            <li class="nav-item ms-2">
+              <div class="navbar-status">
+                <div class="status-dot" id="apiStatusDot"></div>
+                <span id="apiStatusText">Connecting...</span>
+              </div>
+            </li>
+          </ul>
         </div>
-    </div>
-</nav>
+      </div>
+    </nav>
 
-<!-- ── HERO ───────────────────────────────────────────────── -->
-<section class="hero-section">
-    <div class="container">
+    <section class="hero-section">
+      <div class="container">
         <div class="hero-badge">
-            <i class="bi bi-cpu-fill"></i>
-            Powered by LangGraph · Groq LLaMA 3.3 70B · Pinecone · CRAG
+          <i class="bi bi-cpu-fill"></i> Powered by LangGraph · Groq · Pinecone
+          · CRAG
         </div>
         <h1 class="hero-title">Medical Research Assistant</h1>
         <p class="hero-subtitle">
-            Ask any medical question — 8 AI agents research, validate, and deliver
-            a doctor-approved report with citations.
+          Ask any medical question. 8 AI agents research, validate, and deliver
+          a doctor-approved report.
         </p>
-    </div>
-</section>
+      </div>
+    </section>
 
-<!-- ── MAIN CONTENT ───────────────────────────────────────── -->
-<div class="container py-4">
-    <div class="row g-4">
-
-        <!-- ── LEFT COLUMN: Query Form + Progress ─────────── -->
+    <div class="container py-4">
+      <div class="row g-4">
+        <!-- Left Column -->
         <div class="col-lg-5">
-
-            <!-- Query Form -->
-            <div class="card mb-4">
-                <div class="card-header-custom">
-                    <i class="bi bi-search"></i>
-                    New Research Query
-                </div>
-                <div class="card-body">
-                    <div class="mb-3">
-                        <label class="form-label">Research Question</label>
-                        <textarea
-                            class="form-control"
-                            id="queryInput"
-                            placeholder="e.g. What are the latest treatment options for Type 2 Diabetes?"
-                            rows="4"
-                        ></textarea>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Focus Area</label>
-                        <select class="form-select" id="focusArea">
-                            <option value="general">🔬 General Medical Q&A</option>
-                            <option value="disease">🦠 Disease-Specific Research</option>
-                            <option value="drug">💊 Drug & Treatment Research</option>
-                            <option value="news">📰 Latest Medical News</option>
-                        </select>
-                    </div>
-
-                    <!-- Disclaimer -->
-                    <div class="disclaimer-banner mb-3">
-                        <i class="bi bi-exclamation-triangle-fill"></i>
-                        <span>For research purposes only. Not medical advice.</span>
-                    </div>
-
-                    <button class="btn btn-primary w-100 btn-lg" id="startBtn" onclick="startResearch()">
-                        <i class="bi bi-play-fill"></i>
-                        Start Research
-                    </button>
-                </div>
+          <div class="card mb-4">
+            <div class="card-header-custom">
+              <i class="bi bi-search"></i> New Research Query
             </div>
-
-            <!-- Agent Progress Panel -->
-            <div class="card" id="progressCard" style="display:none;">
-                <div class="card-header-custom">
-                    <i class="bi bi-activity"></i>
-                    Agent Pipeline
-                    <span class="badge bg-light text-primary ms-auto" id="progressBadge">Starting...</span>
-                </div>
-                <div class="card-body">
-                    <div class="agent-pipeline" id="agentPipeline">
-
-                        <!-- Memory Agent -->
-                        <div class="agent-step" id="step-memory_load">
-                            <div class="agent-icon">🧠</div>
-                            <div class="agent-info">
-                                <div class="agent-name">Memory Agent</div>
-                                <div class="agent-desc">Loading prior research context</div>
-                            </div>
-                            <span class="agent-status-badge badge bg-secondary">Waiting</span>
-                        </div>
-
-                        <!-- Search Agent -->
-                        <div class="agent-step" id="step-search_agent">
-                            <div class="agent-icon">🔍</div>
-                            <div class="agent-info">
-                                <div class="agent-name">Search Agent</div>
-                                <div class="agent-desc">Tavily web search</div>
-                            </div>
-                            <span class="agent-status-badge badge bg-secondary">Waiting</span>
-                        </div>
-
-                        <!-- RAG Agent -->
-                        <div class="agent-step" id="step-rag_agent">
-                            <div class="agent-icon">📚</div>
-                            <div class="agent-info">
-                                <div class="agent-name">RAG Agent</div>
-                                <div class="agent-desc">Pinecone + CRAG validation</div>
-                            </div>
-                            <span class="agent-status-badge badge bg-secondary">Waiting</span>
-                        </div>
-
-                        <!-- News Agent -->
-                        <div class="agent-step" id="step-news_agent">
-                            <div class="agent-icon">📰</div>
-                            <div class="agent-info">
-                                <div class="agent-name">News Agent</div>
-                                <div class="agent-desc">Latest medical news</div>
-                            </div>
-                            <span class="agent-status-badge badge bg-secondary">Waiting</span>
-                        </div>
-
-                        <!-- Summarizer -->
-                        <div class="agent-step" id="step-summarizer_agent">
-                            <div class="agent-icon">📝</div>
-                            <div class="agent-info">
-                                <div class="agent-name">Summarizer Agent</div>
-                                <div class="agent-desc">Merging all sources</div>
-                            </div>
-                            <span class="agent-status-badge badge bg-secondary">Waiting</span>
-                        </div>
-
-                        <!-- Fact Check -->
-                        <div class="agent-step" id="step-factcheck_agent">
-                            <div class="agent-icon">🔎</div>
-                            <div class="agent-info">
-                                <div class="agent-name">Fact-Check Agent</div>
-                                <div class="agent-desc">Validating claims</div>
-                            </div>
-                            <span class="agent-status-badge badge bg-secondary">Waiting</span>
-                        </div>
-
-                        <!-- HITL -->
-                        <div class="agent-step" id="step-hitl_node">
-                            <div class="agent-icon">👨‍⚕️</div>
-                            <div class="agent-info">
-                                <div class="agent-name">Doctor Review</div>
-                                <div class="agent-desc">HITL approval gate</div>
-                            </div>
-                            <span class="agent-status-badge badge bg-secondary">Waiting</span>
-                        </div>
-
-                        <!-- Report -->
-                        <div class="agent-step" id="step-report_agent">
-                            <div class="agent-icon">📋</div>
-                            <div class="agent-info">
-                                <div class="agent-name">Report Agent</div>
-                                <div class="agent-desc">Generating final report</div>
-                            </div>
-                            <span class="agent-status-badge badge bg-secondary">Waiting</span>
-                        </div>
-
-                        <!-- Export -->
-                        <div class="agent-step" id="step-export_agent">
-                            <div class="agent-icon">📤</div>
-                            <div class="agent-info">
-                                <div class="agent-name">Export Agent</div>
-                                <div class="agent-desc">PDF & Word generation</div>
-                            </div>
-                            <span class="agent-status-badge badge bg-secondary">Waiting</span>
-                        </div>
-
-                    </div>
-                </div>
+            <div class="card-body">
+              <textarea
+                class="form-control"
+                id="queryInput"
+                rows="4"
+                placeholder="e.g. What are the latest treatment options for Type 2 Diabetes?"
+              ></textarea>
+              <div class="mt-3">
+                <label class="form-label">Focus Area</label>
+                <select class="form-select" id="focusArea">
+                  <option value="general">🔬 General Medical</option>
+                  <option value="disease">🦠 Disease</option>
+                  <option value="drug">💊 Drug / Treatment</option>
+                  <option value="news">📰 Latest News</option>
+                </select>
+              </div>
+              <button
+                class="btn btn-primary w-100 btn-lg mt-4"
+                id="startBtn"
+                onclick="startResearch()"
+              >
+                <i class="bi bi-play-fill"></i> Start Research
+              </button>
             </div>
+          </div>
 
+          <!-- Progress Panel -->
+          <div class="card" id="progressCard" style="display: none">
+            <div class="card-header-custom">
+              <i class="bi bi-activity"></i> Agent Pipeline
+              <span
+                class="badge bg-light text-primary ms-auto"
+                id="progressBadge"
+                >Running...</span
+              >
+            </div>
+            <div class="card-body">
+              <div class="agent-pipeline" id="agentPipeline">
+                <!-- Populated by JS -->
+              </div>
+            </div>
+          </div>
         </div>
 
-        <!-- ── RIGHT COLUMN: HITL + Report ────────────────── -->
+        <!-- Right Column -->
         <div class="col-lg-7">
-
-            <!-- Welcome State -->
-            <div id="welcomeState" class="card">
-                <div class="card-body text-center py-5">
-                    <div style="font-size:4rem; margin-bottom:1rem;">🏥</div>
-                    <h4 class="text-navy fw-bold mb-2">Welcome to MediResearch AI</h4>
-                    <p class="text-muted mb-4">
-                        Enter a medical research question on the left to get started.
-                        Our 8 AI agents will research, validate, and deliver a
-                        comprehensive report.
-                    </p>
-                    <div class="row g-3 text-start mt-2">
-                        <div class="col-md-6">
-                            <div class="alert-medical info">
-                                <i class="bi bi-search"></i>
-                                <div>
-                                    <strong>Web Search</strong><br>
-                                    <small>Tavily AI search — no rate limits</small>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="alert-medical success">
-                                <i class="bi bi-database"></i>
-                                <div>
-                                    <strong>Knowledge Base</strong><br>
-                                    <small>Pinecone + CRAG validation</small>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="alert-medical warning">
-                                <i class="bi bi-person-check"></i>
-                                <div>
-                                    <strong>Doctor Approval</strong><br>
-                                    <small>HITL gate before final report</small>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="alert-medical info">
-                                <i class="bi bi-file-earmark-arrow-down"></i>
-                                <div>
-                                    <strong>Export Reports</strong><br>
-                                    <small>Download as PDF or Word</small>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+          <div id="welcomeState" class="card">
+            <div class="card-body text-center py-5">
+              <h4>Welcome to MediResearch AI</h4>
+              <p class="text-muted">
+                Enter your question on the left to begin.
+              </p>
             </div>
+          </div>
 
-            <!-- Loading State -->
-            <div id="loadingState" class="card" style="display:none;">
-                <div class="card-body text-center py-5">
-                    <div class="spinner-medical mb-3"></div>
-                    <h5 class="text-navy fw-bold" id="loadingMessage">
-                        Starting research...
-                    </h5>
-                    <p class="text-muted small" id="loadingSubMessage">
-                        Please wait while agents gather information
-                    </p>
-                </div>
+          <div id="loadingState" class="card" style="display: none">
+            <div class="card-body text-center py-5">
+              <div class="spinner-medical mb-3"></div>
+              <h5 id="loadingMessage">Starting research...</h5>
+              <p class="text-muted small" id="loadingSubMessage"></p>
             </div>
+          </div>
 
-            <!-- HITL Panel -->
-            <div id="hitlPanel" style="display:none;">
-                <div class="hitl-panel mb-4">
-                    <div class="hitl-header">
-                        <i class="bi bi-person-check-fill text-warning fs-4 hitl-badge"></i>
-                        <span class="hitl-title">⏸ Doctor Review Required</span>
-                        <span class="badge bg-warning text-dark ms-auto hitl-badge">Awaiting Approval</span>
-                    </div>
+          <div id="hitlPanel" style="display: none">
+            <!-- HITL panel will be populated by JS -->
+          </div>
 
-                    <!-- Confidence Score -->
-                    <div class="d-flex align-items-center gap-3 mb-3">
-                        <div class="confidence-circle" id="confidenceCircle">
-                            <span id="confidenceScore">--</span>
-                            <span class="confidence-label">/ 100</span>
-                        </div>
-                        <div>
-                            <div class="fw-bold text-gray-900">AI Confidence Score</div>
-                            <div class="text-muted small" id="confidenceLabel">
-                                Calculating...
-                            </div>
-                            <div class="text-muted small mt-1">
-                                Review the summary and approve or reject below
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Summary Preview -->
-                    <div class="mb-3">
-                        <label class="form-label">Research Summary</label>
-                        <div
-                            id="summaryPreview"
-                            style="
-                                max-height: 200px;
-                                overflow-y: auto;
-                                background: white;
-                                border: 1.5px solid #e5e7eb;
-                                border-radius: 8px;
-                                padding: 0.75rem;
-                                font-size: 0.875rem;
-                                line-height: 1.6;
-                            "
-                        >
-                            Loading summary...
-                        </div>
-                    </div>
-
-                    <!-- Doctor Comments -->
-                    <div class="mb-3">
-                        <label class="form-label">
-                            Doctor's Notes
-                            <span class="text-muted fw-normal">(optional)</span>
-                        </label>
-                        <textarea
-                            class="form-control"
-                            id="doctorComments"
-                            placeholder="Add any corrections, clarifications, or additional notes..."
-                            rows="3"
-                        ></textarea>
-                    </div>
-
-                    <!-- Approval Buttons -->
-                    <div class="d-flex gap-2">
-                        <button
-                            class="btn btn-success flex-fill"
-                            onclick="submitApprovalDecision('approved')"
-                        >
-                            <i class="bi bi-check-circle-fill"></i>
-                            Approve & Generate Report
-                        </button>
-                        <button
-                            class="btn btn-danger flex-fill"
-                            onclick="submitApprovalDecision('rejected')"
-                        >
-                            <i class="bi bi-x-circle-fill"></i>
-                            Reject & Revise
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Report Panel -->
-            <div id="reportPanel" style="display:none;">
-
-                <!-- Report Header -->
-                <div class="card mb-3">
-                    <div class="card-header-custom">
-                        <i class="bi bi-file-earmark-medical-fill"></i>
-                        Final Research Report
-                        <span class="badge bg-success ms-auto">
-                            <i class="bi bi-check-circle-fill"></i> Approved
-                        </span>
-                    </div>
-                    <div class="card-body">
-
-                        <!-- Report Meta -->
-                        <div class="d-flex align-items-center gap-3 mb-3">
-                            <div class="confidence-circle" id="reportConfidenceCircle">
-                                <span id="reportConfidenceScore">--</span>
-                                <span class="confidence-label">/ 100</span>
-                            </div>
-                            <div class="flex-fill">
-                                <div class="fw-bold" id="reportQuery">--</div>
-                                <div class="text-muted small" id="reportMeta">--</div>
-                            </div>
-                        </div>
-
-                        <!-- Export Buttons -->
-                        <div class="d-flex gap-2 flex-wrap">
-                            <button
-                                class="btn btn-outline-primary"
-                                id="exportPdfBtn"
-                                onclick="downloadExport('pdf')"
-                            >
-                                <i class="bi bi-file-earmark-pdf-fill text-danger"></i>
-                                Download PDF
-                            </button>
-                            <button
-                                class="btn btn-outline-primary"
-                                id="exportWordBtn"
-                                onclick="downloadExport('word')"
-                            >
-                                <i class="bi bi-file-earmark-word-fill text-primary"></i>
-                                Download Word
-                            </button>
-                            
-                                href="sessions.html"
-                                class="btn btn-outline-primary ms-auto"
-                            >
-                                <i class="bi bi-clock-history"></i>
-                                View History
-                            </a>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Report Content -->
-                <div class="card">
-                    <div class="card-body">
-                        <div id="reportContent">
-                            <!-- Rendered report goes here -->
-                        </div>
-                    </div>
-                </div>
-
-            </div>
-
+          <div id="reportPanel" style="display: none">
+            <!-- Report panel will be populated by JS -->
+          </div>
         </div>
+      </div>
     </div>
-</div>
 
-<!-- ── FOOTER ─────────────────────────────────────────────── -->
-<footer class="footer mt-5">
-    <div class="container">
-        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
-            <div>
-                <strong class="text-white">MediResearch AI</strong> —
-                Multi-Agent Medical Research Assistant
-            </div>
-            <div>
-                ⚠️ For research purposes only. Not medical advice.
-            </div>
+    <footer class="footer mt-5">
+      <div class="container">
+        <div
+          class="d-flex justify-content-between align-items-center flex-wrap gap-2"
+        >
+          <div>
+            <strong>MediResearch AI</strong> — Multi-Agent Medical Research
+            Assistant
+          </div>
+          <div>⚠️ For research purposes only. Not medical advice.</div>
         </div>
-    </div>
-</footer>
+      </div>
+    </footer>
 
-<!-- Bootstrap JS -->
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-<!-- API Client -->
-<script src="js/api.js"></script>
-<!-- Page Logic -->
-<script src="js/research.js"></script>
-
-</body>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/research.js"></script>
+  </body>
 </html>
