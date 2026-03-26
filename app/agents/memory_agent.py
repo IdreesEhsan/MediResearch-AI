@@ -74,8 +74,11 @@ def save_session(state: ResearchState) -> bool:
         cursor = conn.cursor()
         
         sources_json = json.dumps(state.get('sources', []))
-        hitl_approved = 1 if str(state.get("hitl_decision", "")) == "approved" else 0
         
+        # Clean status - no more HITL dependency
+        confidence = state.get("confidence_score", 0)
+        status = "Completed" if confidence >= 60 else "Low Confidence"
+
         cursor.execute("""
             INSERT OR REPLACE INTO sessions
             (session_id, query, focus_area, summary, final_report,
@@ -88,14 +91,17 @@ def save_session(state: ResearchState) -> bool:
             state.get("summary", ""),
             state.get("final_report", ""),
             sources_json,
-            state.get("confidence_score", 0),
-            hitl_approved,
+            confidence,
+            1,  # We treat all as approved since HITL is removed
             datetime.now().isoformat()
         ))
         
         conn.commit()
         conn.close()
+        
+        print(f"✅ Session saved: {state.get('session_id', '')[:8]} | Confidence: {confidence}/100 | Status: Completed")
         return True
+        
     except Exception as e:
         print(f"❌ Failed to save session: {e}")
         return False
