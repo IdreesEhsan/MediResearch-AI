@@ -184,7 +184,6 @@ async function viewSession(session_id) {
     const modalBody = document.getElementById('sessionModalBody');
     const continueBtn = document.getElementById('continueResearchBtn');
 
-    // Show loading in modal
     modalBody.innerHTML = `
         <div class="text-center py-4">
             <div class="spinner-medical"></div>
@@ -196,19 +195,17 @@ async function viewSession(session_id) {
     try {
         const session = await getSession(session_id);
 
-        // Build confidence display
-        const score      = session.confidence_score || 0;
-        const confidence = formatConfidence(score);
+        const score = session.confidence_score || 0;
+        const confidenceClass = score >= 80 ? 'text-success' : score >= 60 ? 'text-warning' : 'text-danger';
 
         modalBody.innerHTML = `
 
-            <!-- Meta info -->
             <div class="d-flex align-items-center gap-3 mb-4">
-                <div class="confidence-circle ${confidence.cssClass}">
+                <div class="confidence-circle ${score >= 80 ? 'high' : score >= 60 ? 'medium' : 'low'}">
                     <span>${score}</span>
                     <span class="confidence-label">/ 100</span>
                 </div>
-                <div>
+                <div class="flex-fill">
                     <div class="fw-bold fs-6">${escapeHTML(session.query)}</div>
                     <div class="text-muted small mt-1">
                         <span class="badge-focus ${getFocusBadgeClass(session.focus_area)} me-2">
@@ -217,10 +214,9 @@ async function viewSession(session_id) {
                         ${formatDate(session.created_at)}
                     </div>
                     <div class="mt-1">
-                        ${session.hitl_approved
-                            ? '<span class="text-success small"><i class="bi bi-check-circle-fill"></i> Doctor Approved</span>'
-                            : '<span class="text-warning small"><i class="bi bi-clock-fill"></i> Pending/Rejected</span>'
-                        }
+                        <span class="text-success small">
+                            <i class="bi bi-check-circle-fill"></i> Completed
+                        </span>
                     </div>
                 </div>
             </div>
@@ -231,19 +227,9 @@ async function viewSession(session_id) {
             ${session.summary ? `
                 <div class="mb-4">
                     <div class="section-title">
-                        <i class="bi bi-card-text"></i>
-                        Research Summary
+                        <i class="bi bi-card-text"></i> Research Summary
                     </div>
-                    <div style="
-                        background:var(--gray-50);
-                        border:1.5px solid var(--gray-200);
-                        border-radius:var(--radius-sm);
-                        padding:1rem;
-                        font-size:0.875rem;
-                        line-height:1.7;
-                        max-height:200px;
-                        overflow-y:auto;
-                    ">
+                    <div class="summary-box">
                         ${escapeHTML(session.summary)}
                     </div>
                 </div>
@@ -251,31 +237,22 @@ async function viewSession(session_id) {
 
             <!-- Final Report -->
             ${session.final_report ? `
-                <div class="mb-3">
+                <div>
                     <div class="section-title">
-                        <i class="bi bi-file-earmark-medical-fill"></i>
-                        Final Report
+                        <i class="bi bi-file-earmark-medical-fill"></i> Final Report
                     </div>
-                    <div style="
-                        background:var(--gray-50);
-                        border:1.5px solid var(--gray-200);
-                        border-radius:var(--radius-sm);
-                        padding:1rem;
-                        max-height:300px;
-                        overflow-y:auto;
-                    ">
+                    <div class="report-box">
                         ${markdownToHTML(session.final_report)}
                     </div>
                 </div>
             ` : `
-                <div class="alert-medical warning">
+                <div class="alert alert-warning">
                     <i class="bi bi-exclamation-triangle"></i>
-                    No final report available for this session.
+                    No detailed final report available for this session.
                 </div>
             `}
         `;
 
-        // Set up continue research button
         continueBtn.onclick = () => {
             continueResearch(session.query, session.focus_area);
             modal.hide();
@@ -283,14 +260,13 @@ async function viewSession(session_id) {
 
     } catch (error) {
         modalBody.innerHTML = `
-            <div class="alert-medical danger">
+            <div class="alert alert-danger">
                 <i class="bi bi-exclamation-circle-fill"></i>
                 Failed to load session: ${error.message}
             </div>
         `;
     }
 }
-
 
 // ── Continue Research ─────────────────────────────────────────
 function continueResearch(query, focus_area) {

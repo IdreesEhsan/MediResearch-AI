@@ -1,4 +1,4 @@
-// frontend/js/research.js - FINAL POLISHED VERSION
+// frontend/js/research.js - CLEAN FINAL VERSION (No more alert popups)
 let currentSessionId = null;
 let pollingInterval = null;
 
@@ -45,9 +45,7 @@ function startPolling() {
                 clearInterval(pollingInterval);
                 await showReportView();
             }
-        } catch (e) {
-            console.error("Polling error:", e);
-        }
+        } catch (e) {}
     }, 2000);
 }
 
@@ -58,25 +56,24 @@ async function showReportView() {
 
         const contentEl = document.getElementById('reportContent');
         if (contentEl) {
-            if (reportData.final_report && reportData.final_report.length > 50) {
+            if (reportData.final_report && reportData.final_report.length > 100) {
                 contentEl.innerHTML = markdownToHTML(reportData.final_report);
             } else {
                 contentEl.innerHTML = `
                     <div class="alert alert-success">
-                        <strong>Research completed successfully!</strong><br>
-                        Confidence Score: <strong>${reportData.confidence_score || 85}/100</strong>
+                        <strong>Research completed successfully!</strong><br><br>
+                        <strong>Confidence:</strong> ${reportData.confidence_score || 85}/100
                     </div>
-                    <p class="text-muted">Full report content is available in the generated PDF and Word files in the <code>exports/</code> folder.</p>
+                    <p class="text-muted">Full detailed report is available in the generated PDF and Word files in the <code>exports/</code> folder.</p>
                 `;
             }
         }
 
         showToast('Research completed! Report is ready.', 'success');
-        resetUI();   // Reset button here
+        resetUI();
 
     } catch (error) {
-        console.error("Failed to load report:", error);
-        showToast('Research completed but failed to display full report content', 'warning');
+        showToast('Research completed but failed to display full report', 'warning');
         resetUI();
     }
 }
@@ -95,8 +92,51 @@ function resetUI() {
     }
 }
 
+// Nice non-blocking Toast (no more alert popups)
 function showToast(message, type = 'info') {
-    alert(message);   // You can improve this later with a nice toast
+    let container = document.getElementById('toast-container');
+    if (!container) {
+        container = document.createElement('div');
+        container.id = 'toast-container';
+        container.style.cssText = `
+            position: fixed; 
+            top: 80px; 
+            right: 20px; 
+            z-index: 9999; 
+            display: flex; 
+            flex-direction: column; 
+            gap: 8px;
+        `;
+        document.body.appendChild(container);
+    }
+
+    const toast = document.createElement('div');
+    const color = type === 'success' ? '#057a55' : type === 'danger' ? '#c81e1e' : '#1a56db';
+    
+    toast.style.cssText = `
+        background: white;
+        border-left: 4px solid ${color};
+        border-radius: 8px;
+        padding: 14px 18px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+        font-size: 0.95rem;
+        max-width: 340px;
+        animation: slideIn 0.3s ease forwards;
+    `;
+
+    toast.innerHTML = `
+        <div style="display:flex; align-items:center; gap:10px;">
+            <span style="font-size:1.3rem;">${type==='success' ? '✅' : type==='danger' ? '❌' : 'ℹ️'}</span>
+            <span>${message}</span>
+        </div>
+    `;
+
+    container.appendChild(toast);
+
+    setTimeout(() => {
+        toast.style.opacity = '0';
+        setTimeout(() => toast.remove(), 300);
+    }, 4000);
 }
 
 function markdownToHTML(text) {
@@ -106,18 +146,4 @@ function markdownToHTML(text) {
         .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
         .replace(/^### (.+)$/gm, '<h5>$1</h5>')
         .replace(/^## (.+)$/gm, '<h4>$1</h4>');
-}
-
-// Optional helper functions
-function downloadReport() {
-    if (currentSessionId) {
-        window.open(`/export/download/${currentSessionId}/pdf`, '_blank');
-    }
-}
-
-function copyReport() {
-    const content = document.getElementById('reportContent').innerText;
-    navigator.clipboard.writeText(content).then(() => {
-        showToast('Report copied to clipboard!', 'success');
-    });
 }
