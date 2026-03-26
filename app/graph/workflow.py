@@ -98,17 +98,31 @@ def run_research(
     auto_approve: bool = False
 ) -> ResearchState:
     session_id = session_id or str(uuid.uuid4())
+    
+    # Create initial state
     state = initial_state(query, focus_area, session_id)
 
+    # Auto-approve logic - set BEFORE invoking the graph
     if auto_approve:
         state["hitl_decision"] = HITLDecision.APPROVED
         state["hitl_comments"] = "Auto-approved for testing"
+        print("🤖 Auto-approve enabled - HITL will be bypassed")
 
     app = build_workflow()
     config_dict = {"configurable": {"thread_id": session_id}}
 
-    print(f"\n{'='*60}\nStarting MediResearch AI Session: {session_id[:8]}...\n{'='*60}")
+    print(f"\n{'='*60}")
+    print(f"🏥 Starting MediResearch AI Session: {session_id[:8]}...")
+    print(f"Query: {query}")
+    print(f"{'='*60}\n")
+
+    # Run the workflow
     result = app.invoke(state, config=config_dict)
-    print(f"✅ Research completed! Confidence: {result.get('confidence_score', 0)}/100\n{'='*60}\n")
+
+    print(f"\n{'='*60}")
+    print(f"✅ Research completed!")
+    print(f"   Confidence    : {result.get('confidence_score', 0)}/100")
+    print(f"   Report length : {len(result.get('final_report', ''))} characters")
+    print(f"{'='*60}\n")
 
     return result
