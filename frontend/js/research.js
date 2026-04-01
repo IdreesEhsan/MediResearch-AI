@@ -1,4 +1,4 @@
-// frontend/js/research.js - CLEAN FINAL VERSION (No more alert popups)
+// frontend/js/research.js - FIXED & CLEAN VERSION
 let currentSessionId = null;
 let pollingInterval = null;
 
@@ -10,8 +10,8 @@ async function startResearch() {
     const query = document.getElementById('queryInput').value.trim();
     const focus_area = document.getElementById('focusArea').value;
 
-    if (!query || query.length < 10) {
-        showToast('Please enter a detailed research question', 'warning');
+    if (!query || query.length < 5) {
+        showToast('Please enter a proper question', 'warning');
         return;
     }
 
@@ -25,6 +25,15 @@ async function startResearch() {
         const response = await apiStartResearch(query, focus_area);
         currentSessionId = response.session_id;
 
+        // CRITICAL FIX: Check for non-medical response
+        if (response.session_id && response.session_id.startsWith("non_medical_")) {
+            showToast(response.response || "This query is not medical-related.", 'info');
+            resetUI();           // Reset button
+            showState('welcome'); // Go back to welcome screen
+            return;              // STOP here - do not start polling
+        }
+
+        // Normal medical flow
         showToast('Research started successfully!', 'success');
         startPolling();
 
@@ -45,7 +54,13 @@ function startPolling() {
                 clearInterval(pollingInterval);
                 await showReportView();
             }
-        } catch (e) {}
+        } catch (error) {
+            console.error("Polling error:", error);
+            if (error.message.includes("404")) {
+                clearInterval(pollingInterval);
+                resetUI();
+            }
+        }
     }, 2000);
 }
 
@@ -62,13 +77,11 @@ async function showReportView() {
                 contentEl.innerHTML = `
                     <div class="alert alert-success">
                         <strong>Research completed successfully!</strong><br><br>
-                        <strong>Confidence:</strong> ${reportData.confidence_score || 85}/100
+                        Confidence: <strong>${reportData.confidence_score || 85}/100</strong>
                     </div>
-                    <p class="text-muted">Full detailed report is available in the generated PDF and Word files in the <code>exports/</code> folder.</p>
                 `;
             }
         }
-
         showToast('Research completed! Report is ready.', 'success');
         resetUI();
 
@@ -92,21 +105,12 @@ function resetUI() {
     }
 }
 
-// Nice non-blocking Toast (no more alert popups)
 function showToast(message, type = 'info') {
     let container = document.getElementById('toast-container');
     if (!container) {
         container = document.createElement('div');
         container.id = 'toast-container';
-        container.style.cssText = `
-            position: fixed; 
-            top: 80px; 
-            right: 20px; 
-            z-index: 9999; 
-            display: flex; 
-            flex-direction: column; 
-            gap: 8px;
-        `;
+        container.style.cssText = 'position:fixed; top:80px; right:20px; z-index:9999; display:flex; flex-direction:column; gap:8px;';
         document.body.appendChild(container);
     }
 
@@ -121,7 +125,6 @@ function showToast(message, type = 'info') {
         box-shadow: 0 4px 15px rgba(0,0,0,0.15);
         font-size: 0.95rem;
         max-width: 340px;
-        animation: slideIn 0.3s ease forwards;
     `;
 
     toast.innerHTML = `
@@ -141,9 +144,5 @@ function showToast(message, type = 'info') {
 
 function markdownToHTML(text) {
     if (!text) return '<p>No detailed report available.</p>';
-    return text
-        .replace(/\n/g, '<br>')
-        .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-        .replace(/^### (.+)$/gm, '<h5>$1</h5>')
-        .replace(/^## (.+)$/gm, '<h4>$1</h4>');
+    return text.replace(/\n/g, '<br>');
 }

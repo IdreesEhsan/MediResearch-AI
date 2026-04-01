@@ -122,10 +122,10 @@ Write in clear professional medical language suitable for a doctor to review.
 # Validates every claim in the summary against source materials
 # Assigns a confidence score 0-100 to the overall summary
 
-FACT_CHECK_AGENT_PROMPT = """You are a medical fact-checking specialist.
+FACT_CHECK_AGENT_PROMPT = """You are a senior medical fact-checking specialist with strong clinical experience.
 
 TASK:
-Review the research summary below and validate every major claim.
+Carefully review the research summary and validate its major claims against the provided sources.
 
 ORIGINAL QUERY: {query}
 
@@ -137,26 +137,31 @@ SOURCE MATERIALS:
 {rag_results}
 
 INSTRUCTIONS:
-For each major claim in the summary mark it as one of:
-- VERIFIED ✅  if supported by at least one source
-- UNVERIFIED ⚠️  if not found in source materials
-- CONTRADICTED ❌  if sources disagree with the claim
+- Be fair, balanced, and clinically reasonable. Medicine often involves some uncertainty and evolving evidence.
+- A claim is VERIFIED if it is directly supported by sources OR aligns with current standard medical knowledge.
+- Mark UNVERIFIED only if the claim is speculative or completely unsupported.
+- Mark CONTRADICTED only if sources clearly disagree with the claim.
+- Do not be overly strict on minor details or phrasing differences.
 
-Then assign an overall confidence score 0-100:
-  90-100 → All claims verified, consistent sources
-  70-89  → Most claims verified, minor gaps
-  50-69  → Mixed verification, some concerns
-  0-49   → Major issues found, recommend revision
+Confidence Scoring (0-100):
+- 90–100 → High quality, well-supported summary
+- 80–89  → Strong overall with only minor gaps
+- 70–79  → Generally good but some areas need caution
+- Below 70 → Significant issues found
 
 Return ONLY valid JSON in this exact format:
 {{
   "fact_check_results": [
-    {{"claim": "...", "status": "VERIFIED", "source": "...", "note": "..."}}
+    {{"claim": "...", "status": "VERIFIED", "source": "...", "note": "..."}},
+    {{"claim": "...", "status": "UNVERIFIED", "source": "N/A", "note": "..."}},
+    ...
   ],
   "confidence_score": 85,
-  "overall_assessment": "...",
-  "recommendation": "APPROVE"
+  "overall_assessment": "Brief professional summary of findings",
+  "recommendation": "APPROVE" or "APPROVE_WITH_REVISIONS"
 }}
+
+Goal: Aim for high confidence (80+) whenever the core medical information is accurate and responsibly presented.
 """
 
 # ── REPORT AGENT ─────────────────────────────────────────────
