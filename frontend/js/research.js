@@ -1,4 +1,4 @@
-// frontend/js/research.js - FIXED & CLEAN VERSION
+// frontend/js/research.js - FINAL CLEAN VERSION
 let currentSessionId = null;
 let pollingInterval = null;
 
@@ -25,12 +25,12 @@ async function startResearch() {
         const response = await apiStartResearch(query, focus_area);
         currentSessionId = response.session_id;
 
-        // CRITICAL FIX: Check for non-medical response
+        // Handle non-medical queries
         if (response.session_id && response.session_id.startsWith("non_medical_")) {
             showToast(response.response || "This query is not medical-related.", 'info');
-            resetUI();           // Reset button
-            showState('welcome'); // Go back to welcome screen
-            return;              // STOP here - do not start polling
+            resetUI();
+            showState('welcome');
+            return;
         }
 
         // Normal medical flow
@@ -56,10 +56,6 @@ function startPolling() {
             }
         } catch (error) {
             console.error("Polling error:", error);
-            if (error.message.includes("404")) {
-                clearInterval(pollingInterval);
-                resetUI();
-            }
         }
     }, 2000);
 }
@@ -145,4 +141,42 @@ function showToast(message, type = 'info') {
 function markdownToHTML(text) {
     if (!text) return '<p>No detailed report available.</p>';
     return text.replace(/\n/g, '<br>');
+}
+
+// ====================== DOWNLOAD & COPY ======================
+function downloadReport() {
+    if (!currentSessionId) {
+        showToast('No active session found. Please run a research first.', 'warning');
+        return;
+    }
+
+    try {
+        // Full absolute URL to avoid path issues
+        const url = `http://localhost:8000/export/download/${currentSessionId}/pdf`;
+        window.open(url, '_blank');
+        showToast('Downloading PDF...', 'success');
+    } catch (error) {
+        showToast('Failed to start download. Please try again.', 'danger');
+    }
+}
+
+function copyReport() {
+    const contentEl = document.getElementById('reportContent');
+    if (!contentEl) {
+        showToast('No report content available', 'warning');
+        return;
+    }
+
+    const text = contentEl.innerText || contentEl.textContent || '';
+
+    if (!text || text.trim() === '') {
+        showToast('No text to copy', 'warning');
+        return;
+    }
+
+    navigator.clipboard.writeText(text).then(() => {
+        showToast('Report copied to clipboard!', 'success');
+    }).catch(() => {
+        showToast('Failed to copy report to clipboard', 'danger');
+    });
 }
